@@ -10,6 +10,7 @@ from datetime import datetime
 import os
 from typing import List, Optional, Union
 from ..scrapers import NaukriScraper, RemoteOKScraper, WellfoundScraper
+from ..processors import DataProcessor
 
 class JobAgent:
     """Main Job Agent class to coordinate job scraping across platforms"""
@@ -24,7 +25,9 @@ class JobAgent:
         self.naukri_scraper = NaukriScraper()
         self.remoteok_scraper = RemoteOKScraper()
         self.wellfound_scraper = WellfoundScraper()
+        self.data_processor = DataProcessor()
         self.all_jobs = []
+        self.processed_jobs = []
         self.output_dir = output_dir
         
         # Create output directory if it doesn't exist
@@ -76,6 +79,83 @@ class JobAgent:
         
         self.all_jobs = jobs
         return self._create_dataframe(jobs)
+    
+    def process_jobs(
+        self,
+        clean: bool = True,
+        validate: bool = True,
+        remove_duplicates: bool = True
+    ) -> tuple:
+        """
+        Process collected jobs through cleaning and validation pipeline.
+        
+        Args:
+            clean (bool): Whether to clean data
+            validate (bool): Whether to validate data
+            remove_duplicates (bool): Whether to remove duplicates
+            
+        Returns:
+            tuple: (processed_jobs_dataframe, statistics_dict)
+        """
+        if not self.all_jobs:
+            print("No jobs to process. Run search_jobs() first.")
+            return pd.DataFrame(), {}
+        
+        self.processed_jobs, stats = self.data_processor.process(
+            self.all_jobs,
+            clean=clean,
+            validate=validate,
+            remove_duplicates=remove_duplicates
+        )
+        
+        print(self.data_processor.get_processing_report(stats))
+        
+        return self._create_dataframe(self.processed_jobs), stats
+    
+    def filter_jobs(
+        self,
+        title_keywords: Optional[List[str]] = None,
+        locations: Optional[List[str]] = None,
+        sources: Optional[List[str]] = None,
+        job_types: Optional[List[str]] = None
+    ) -> pd.DataFrame:
+        """
+        Filter processed jobs based on criteria.
+        
+        Args:
+            title_keywords (List[str]): Keywords to filter by job title
+            locations (List[str]): Locations to filter by
+            sources (List[str]): Sources to filter by
+            job_types (List[str]): Job types to filter by
+            
+        Returns:
+            pd.DataFrame: Filtered jobs
+        """
+        if not self.processed_jobs:
+            print("No processed jobs available. Run process_jobs() first.")
+            return pd.DataFrame()
+        
+        filtered_jobs = self.processed_jobs.copy()
+        
+        if title_keywords:
+            print(f"\nFiltering by title keywords: {title_keywords}")
+            filtered_jobs = self.data_processor.filter.filter_by_title(filtered_jobs, title_keywords)
+        
+        if locations:
+            print(f"Filtering by locations: {locations}")
+            filtered_jobs = self.data_processor.filter.filter_by_location(filtered_jobs, locations)
+        
+        if sources:
+            print(f"Filtering by sources: {sources}")
+            filtered_jobs = self.data_processor.filter.filter_by_source(filtered_jobs, sources)
+        
+        if job_types:
+            print(f"Filtering by job types: {job_types}")
+            filtered_jobs = self.data_processor.filter.filter_by_job_type(filtered_jobs, job_types)
+        
+        print(f"Jobs after filtering: {len(filtered_jobs)}\n")
+        
+        return self._create_dataframe(filtered_jobs)
     
     def _create_dataframe(self, jobs: List[dict]) -> pd.DataFrame:
         """

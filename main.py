@@ -45,6 +45,40 @@ def main():
         help='Output CSV filename (optional)'
     )
     
+    parser.add_argument(
+        '--no-clean',
+        action='store_true',
+        help='Skip data cleaning step'
+    )
+    
+    parser.add_argument(
+        '--no-validate',
+        action='store_true',
+        help='Skip data validation step'
+    )
+    
+    parser.add_argument(
+        '--no-deduplicate',
+        action='store_true',
+        help='Skip duplicate removal step'
+    )
+    
+    parser.add_argument(
+        '--filter-locations',
+        type=str,
+        nargs='+',
+        default=None,
+        help='Filter jobs by locations (space-separated)'
+    )
+    
+    parser.add_argument(
+        '--filter-sources',
+        type=str,
+        nargs='+',
+        default=None,
+        help='Filter jobs by sources (space-separated, e.g., naukri remoteok)'
+    )
+    
     args = parser.parse_args()
     
     print("\n" + "="*80)
@@ -65,6 +99,29 @@ def main():
         location=args.location,
         platforms=args.platforms
     )
+    
+    # Process jobs (cleaning, validation, deduplication)
+    print("\n" + "="*80)
+    print("PROCESSING JOBS")
+    print("="*80)
+    
+    df, stats = agent.process_jobs(
+        clean=not args.no_clean,
+        validate=not args.no_validate,
+        remove_duplicates=not args.no_deduplicate
+    )
+    
+    # Filter jobs if criteria provided
+    if args.filter_locations or args.filter_sources:
+        print("\n" + "="*80)
+        print("FILTERING JOBS")
+        print("="*80)
+        
+        df = agent.filter_jobs(
+            title_keywords=[args.job_title],
+            locations=args.filter_locations,
+            sources=args.filter_sources
+        )
     
     # Display summary
     agent.display_summary()
