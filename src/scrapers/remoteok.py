@@ -1,32 +1,31 @@
 """
 RemoteOK Job Scraper Module
 
-This module contains functions to fetch job listings from RemoteOK.com
+This module contains the scraper for job listings from RemoteOK.com
 using their Public API.
 """
 
 import requests
-import pandas as pd
-from datetime import datetime
-import time
+from typing import List, Dict, Optional
+from .base import BaseScraper
 
-class RemoteOKScraper:
+class RemoteOKScraper(BaseScraper):
     """Scraper class for RemoteOK job listings using their API"""
     
-    def __init__(self, api_url="https://remoteok.com/api"):
+    def __init__(self, api_url: str = "https://remoteok.com/api"):
         """
         Initialize the RemoteOK scraper.
         
         Args:
             api_url (str): The base API URL for RemoteOK
         """
+        super().__init__(source_name="RemoteOK")
         self.api_url = api_url
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
-        self.jobs_data = []
     
-    def search_jobs(self, job_title=None, job_type='all'):
+    def search_jobs(self, job_title: Optional[str] = None, job_type: str = 'all') -> List[Dict]:
         """
         Search for jobs on RemoteOK using their API.
         
@@ -35,7 +34,7 @@ class RemoteOKScraper:
             job_type (str): Type of job ('all', 'fulltime', 'freelance', 'parttime')
             
         Returns:
-            list: List of job dictionaries
+            List[Dict]: List of job dictionaries
         """
         try:
             url = f"{self.api_url}"
@@ -47,7 +46,6 @@ class RemoteOKScraper:
             jobs = response.json()
             
             # Filter jobs based on job_title if provided
-            filtered_jobs = []
             for job in jobs:
                 # Skip the first dict if it's metadata
                 if isinstance(job, dict) and job.get('id') == 'remote-ok':
@@ -57,11 +55,12 @@ class RemoteOKScraper:
                     continue
                 
                 job_data = self._extract_job_info(job)
-                if job_data:
-                    filtered_jobs.append(job_data)
+                if job_data and self._validate_job_data(job_data):
+                    job_data = self._add_metadata(job_data)
+                    self.jobs_data.append(job_data)
             
-            self.jobs_data.extend(filtered_jobs)
-            return filtered_jobs
+            print(f"Found {len(self.jobs_data)} jobs from RemoteOK")
+            return self.jobs_data
         
         except requests.RequestException as e:
             print(f"Error fetching from RemoteOK API: {e}")
@@ -70,15 +69,15 @@ class RemoteOKScraper:
             print(f"Error processing RemoteOK data: {e}")
             return []
     
-    def _extract_job_info(self, job):
+    def _extract_job_info(self, job: Dict) -> Optional[Dict]:
         """
         Extract job information from RemoteOK API response.
         
         Args:
-            job (dict): Job data from the API
+            job (Dict): Job data from the API
             
         Returns:
-            dict: Dictionary containing job information
+            Dict: Dictionary containing job information or None
         """
         try:
             job_info = {
@@ -87,11 +86,8 @@ class RemoteOKScraper:
                 'location': job.get('location', 'Remote'),
                 'description': job.get('description', 'N/A'),
                 'link': job.get('url', 'N/A'),
-                'source': 'RemoteOK',
                 'job_type': job.get('job_type', 'N/A'),
                 'salary': job.get('salary', 'N/A'),
-                'tags': job.get('tags', []),
-                'scraped_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             }
             
             return job_info

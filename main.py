@@ -6,7 +6,8 @@ Usage:
 """
 
 import argparse
-from src.job_agent import JobAgent
+import sys
+from src.agent import JobAgent
 
 def main():
     """Main function to run the Job Agent"""

@@ -1,41 +1,40 @@
 """
 Wellfound Job Scraper Module
 
-This module contains functions to scrape job listings from Wellfound.com
+This module contains the scraper for job listings from Wellfound.com
 using Firecrawl for intelligent web scraping.
 """
 
 import requests
-import pandas as pd
-from datetime import datetime
-import json
+from typing import List, Dict, Optional
+import os
+from .base import BaseScraper
 
-class WellfoundScraper:
+class WellfoundScraper(BaseScraper):
     """Scraper class for Wellfound job listings using Firecrawl"""
     
-    def __init__(self, firecrawl_api_key=None):
+    def __init__(self, firecrawl_api_key: Optional[str] = None):
         """
         Initialize the Wellfound scraper with Firecrawl.
         
         Args:
             firecrawl_api_key (str): API key for Firecrawl (from environment or parameter)
         """
+        super().__init__(source_name="Wellfound")
         self.firecrawl_api_key = firecrawl_api_key or self._get_api_key()
         self.firecrawl_api_url = "https://api.firecrawl.dev/v1"
         self.base_url = "https://wellfound.com"
-        self.jobs_data = []
     
-    def _get_api_key(self):
+    def _get_api_key(self) -> Optional[str]:
         """
         Get Firecrawl API key from environment variables.
         
         Returns:
             str: API key or None if not found
         """
-        import os
         return os.getenv('FIRECRAWL_API_KEY')
     
-    def search_jobs(self, job_title, location=None):
+    def search_jobs(self, job_title: str, location: Optional[str] = None) -> List[Dict]:
         """
         Search for jobs on Wellfound using Firecrawl.
         
@@ -44,7 +43,7 @@ class WellfoundScraper:
             location (str): The location to search in (optional)
             
         Returns:
-            list: List of job dictionaries
+            List[Dict]: List of job dictionaries
         """
         if not self.firecrawl_api_key:
             print("Warning: Firecrawl API key not set. Please set FIRECRAWL_API_KEY environment variable.")
@@ -66,13 +65,14 @@ class WellfoundScraper:
             jobs = self._scrape_with_firecrawl(search_url_with_params)
             
             self.jobs_data.extend(jobs)
+            print(f"Found {len(self.jobs_data)} jobs from Wellfound")
             return jobs
         
         except Exception as e:
             print(f"Error during Wellfound scraping: {e}")
             return []
     
-    def _scrape_with_firecrawl(self, url):
+    def _scrape_with_firecrawl(self, url: str) -> List[Dict]:
         """
         Scrape a URL using Firecrawl API.
         
@@ -80,7 +80,7 @@ class WellfoundScraper:
             url (str): The URL to scrape
             
         Returns:
-            list: List of extracted job data
+            List[Dict]: List of extracted job data
         """
         try:
             headers = {
@@ -117,15 +117,15 @@ class WellfoundScraper:
             print(f"Error processing Firecrawl response: {e}")
             return []
     
-    def _parse_wellfound_jobs(self, scraped_data):
+    def _parse_wellfound_jobs(self, scraped_data: Dict) -> List[Dict]:
         """
         Parse job listings from Firecrawl scraped data.
         
         Args:
-            scraped_data (dict): Data returned from Firecrawl
+            scraped_data (Dict): Data returned from Firecrawl
             
         Returns:
-            list: List of parsed job dictionaries
+            List[Dict]: List of parsed job dictionaries
         """
         jobs = []
         
@@ -137,15 +137,6 @@ class WellfoundScraper:
             
             # Parse the content to extract job listings
             # This is a simplified version - actual implementation depends on page structure
-            job_info = {
-                'title': 'Job Title',
-                'company': 'Company Name',
-                'location': 'Location',
-                'description': 'Job Description',
-                'link': scraped_data.get('url', 'N/A'),
-                'source': 'Wellfound',
-                'scraped_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            }
             
             # Note: Actual parsing logic should be implemented based on Wellfound's page structure
             

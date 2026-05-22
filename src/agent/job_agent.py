@@ -1,33 +1,42 @@
 """
-Main Job Agent Module
+Job Agent Module
 
 This module orchestrates the job scraping process across multiple platforms
 and handles data aggregation and storage.
 """
 
-from src.naukri_scraper import NaukriScraper
-from src.remoteok_scraper import RemoteOKScraper
-from src.wellfound_scraper import WellfoundScraper
 import pandas as pd
 from datetime import datetime
 import os
+from typing import List, Optional, Union
+from ..scrapers import NaukriScraper, RemoteOKScraper, WellfoundScraper
 
 class JobAgent:
     """Main Job Agent class to coordinate job scraping across platforms"""
     
-    def __init__(self):
-        """Initialize the Job Agent with scrapers for all platforms"""
+    def __init__(self, output_dir: str = 'data'):
+        """
+        Initialize the Job Agent with scrapers for all platforms.
+        
+        Args:
+            output_dir (str): Directory to store output CSV files
+        """
         self.naukri_scraper = NaukriScraper()
         self.remoteok_scraper = RemoteOKScraper()
         self.wellfound_scraper = WellfoundScraper()
         self.all_jobs = []
-        self.output_dir = 'data'
+        self.output_dir = output_dir
         
         # Create output directory if it doesn't exist
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
     
-    def search_jobs(self, job_title, location=None, platforms='all'):
+    def search_jobs(
+        self, 
+        job_title: str, 
+        location: Optional[str] = None, 
+        platforms: Union[str, List[str]] = 'all'
+    ) -> pd.DataFrame:
         """
         Search for jobs across specified platforms.
         
@@ -37,21 +46,30 @@ class JobAgent:
             platforms (str or list): Platforms to search ('all', 'naukri', 'remoteok', 'wellfound')
             
         Returns:
-            DataFrame: Aggregated job listings
+            pd.DataFrame: Aggregated job listings
         """
         jobs = []
         
-        if platforms == 'all' or 'naukri' in str(platforms).lower():
+        # Normalize platforms input
+        if isinstance(platforms, str):
+            if platforms.lower() == 'all':
+                platforms_list = ['naukri', 'remoteok', 'wellfound']
+            else:
+                platforms_list = [platforms.lower()]
+        else:
+            platforms_list = [p.lower() for p in platforms]
+        
+        if 'naukri' in platforms_list:
             print("\n--- Searching Naukri ---")
             naukri_jobs = self.naukri_scraper.search_jobs(job_title, location, pages=1)
             jobs.extend(naukri_jobs)
         
-        if platforms == 'all' or 'remoteok' in str(platforms).lower():
+        if 'remoteok' in platforms_list:
             print("\n--- Searching RemoteOK ---")
             remoteok_jobs = self.remoteok_scraper.search_jobs(job_title)
             jobs.extend(remoteok_jobs)
         
-        if platforms == 'all' or 'wellfound' in str(platforms).lower():
+        if 'wellfound' in platforms_list:
             print("\n--- Searching Wellfound ---")
             wellfound_jobs = self.wellfound_scraper.search_jobs(job_title, location)
             jobs.extend(wellfound_jobs)
@@ -59,7 +77,7 @@ class JobAgent:
         self.all_jobs = jobs
         return self._create_dataframe(jobs)
     
-    def _create_dataframe(self, jobs):
+    def _create_dataframe(self, jobs: List[dict]) -> pd.DataFrame:
         """
         Create a DataFrame from job listings.
         
@@ -67,7 +85,7 @@ class JobAgent:
             jobs (list): List of job dictionaries
             
         Returns:
-            DataFrame: Pandas DataFrame with job listings
+            pd.DataFrame: Pandas DataFrame with job listings
         """
         if not jobs:
             print("No jobs found.")
@@ -90,15 +108,15 @@ class JobAgent:
         
         return df
     
-    def save_to_csv(self, filename=None):
+    def save_to_csv(self, filename: Optional[str] = None) -> Optional[str]:
         """
         Save job listings to a CSV file.
         
         Args:
-            filename (str): Output filename (optional, default: jobs_YYYY-MM-DD.csv)
+            filename (str): Output filename (optional, default: jobs_YYYY-MM-DD_HH-MM-SS.csv)
             
         Returns:
-            str: Path to the saved file
+            str: Path to the saved file or None if no jobs to save
         """
         if not self.all_jobs:
             print("No jobs to save. Run search_jobs() first.")
@@ -118,7 +136,7 @@ class JobAgent:
         
         return filepath
     
-    def display_summary(self):
+    def display_summary(self) -> None:
         """Display a summary of the scraped jobs"""
         if not self.all_jobs:
             print("No jobs available. Run search_jobs() first.")
@@ -132,6 +150,6 @@ class JobAgent:
         print(f"\nTotal Jobs Found: {len(df)}")
         print(f"\nJobs by Source:")
         print(df['source'].value_counts())
-        print(f"\nJobs by Location:")
+        print(f"\nTop Locations:")
         print(df['location'].value_counts().head(10))
         print("\n" + "="*80)

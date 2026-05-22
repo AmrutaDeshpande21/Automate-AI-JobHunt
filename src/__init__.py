@@ -1,14 +1,15 @@
 """
-__init__.py for src package
+Src Module
+
+Main source package for the Job Agent project.
 """
 
-from .job_agent import JobAgent
-from .naukri_scraper import NaukriScraper
-from .remoteok_scraper import RemoteOKScraper
-from .wellfound_scraper import WellfoundScraper
+from .agent import JobAgent
+from .scrapers import BaseScraper, NaukriScraper, RemoteOKScraper, WellfoundScraper
 
 __all__ = [
     'JobAgent',
+    'BaseScraper',
     'NaukriScraper',
     'RemoteOKScraper',
     'WellfoundScraper'
