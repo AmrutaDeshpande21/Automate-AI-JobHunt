@@ -29,4 +29,10 @@ We aim to develop a job agent that automates the process of job hunting by scrap
 ## Data Collection Methods
 - **Naukri**: We will use HTML scraping to extract job listings.
 - **RemoteOK**: We will utilize their Public API to fetch job data.
-- **Wellfound**: We will use Firecrawal for scraping job information.
+- **Wellfound**: We will use Firecrawl for scraping job information.
+
+## Phase 2 (Implementation progress in this repo)
+- Added an initial `src/job_agent` code scaffold with a scrapers framework.
+- Implemented **RemoteOK** scraping via its `/api` endpoint and title filtering.
+- Added placeholders for **Naukri** and **Wellfound** to be completed in later Phase 2 steps (dynamic scraping / Firecrawl integration).
+- Next Phase 2 steps: implement Naukri HTML/dynamic parsing and wire up Firecrawl for Wellfound; then add a CSV persistence layer (Phase 4).
