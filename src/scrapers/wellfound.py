@@ -32,7 +32,7 @@ class WellfoundScraper(BaseScraper):
         Returns:
             str: API key or None if not found
         """
-        return os.getenv('FIRECRAWL_API_KEY')
+        return os.getenv('FIRECRAWL_API_KEY') or "fc-4703c6f3222a452fb5ef2303878aaaea"
     
     def search_jobs(self, job_title: str, location: Optional[str] = None) -> List[Dict]:
         """

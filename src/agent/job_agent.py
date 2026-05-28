@@ -296,18 +296,27 @@ class JobAgent:
     
     def display_summary(self) -> None:
         """Display a summary of the scraped jobs"""
+        import sys
         if not self.all_jobs:
             print("No jobs available. Run search_jobs() first.")
             return
         
         df = self._create_dataframe(self.all_jobs)
         
-        print("\n" + "="*80)
-        print("JOB SCRAPING SUMMARY")
-        print("="*80)
-        print(f"\nTotal Jobs Found: {len(df)}")
-        print(f"\nJobs by Source:")
-        print(df['source'].value_counts())
-        print(f"\nTop Locations:")
-        print(df['location'].value_counts().head(10))
-        print("\n" + "="*80)
+        encoding = sys.stdout.encoding or 'utf-8'
+        
+        def safe_print(text: str) -> None:
+            try:
+                print(text)
+            except UnicodeEncodeError:
+                print(text.encode(encoding, errors='replace').decode(encoding))
+                
+        safe_print("\n" + "="*80)
+        safe_print("JOB SCRAPING SUMMARY")
+        safe_print("="*80)
+        safe_print(f"\nTotal Jobs Found: {len(df)}")
+        safe_print(f"\nJobs by Source:")
+        safe_print(str(df['source'].value_counts()))
+        safe_print(f"\nTop Locations:")
+        safe_print(str(df['location'].value_counts().head(10)))
+        safe_print("\n" + "="*80)
