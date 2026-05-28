@@ -112,5 +112,11 @@ We aim to develop a job agent that automates the process of job hunting by scrap
 - **Card-Based Markdown Parser**: Reconstructed the empty `_parse_wellfound_jobs` parser in `src/scrapers/wellfound.py` to match the markdown structure returned by Firecrawl on Wellfound's SEO route. Implemented block splitting based on company card prefixes (`[![Logo](...)`) and extracted job titles, companies, locations, descriptions, and application URLs.
 - **Verification & Integration Tests**: Executed `test_integration.py` successfully. The scraper fetched and parsed **32 live jobs** from Wellfound. Committed and pushed both fixes to GitHub (Commit `4566042`).
 
+### Step 12: Automating Browser Search Page Launching
+- **Default-On Browser Launching**: Refactored `main.py` so that opening the browser search page for selected platforms runs automatically by default when executing the scraping process.
+- **Opt-Out Mechanism**: Added a new `--no-browser` CLI flag to allow users and automated schedulers (such as Task Scheduler/cron jobs) to bypass spawning the web browser.
+- **Verification**: Verified that executing the script opens browser pages for Naukri, RemoteOK, and Wellfound automatically, and that executing with `--no-browser` disables it. Committed and pushed to GitHub (Commit `7bc6762`).
+
+
 
 
