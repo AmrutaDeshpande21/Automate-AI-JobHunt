@@ -56,8 +56,9 @@ class WellfoundScraper(BaseScraper):
             if location:
                 params['l'] = location
             
-            # Construct full URL with parameters
-            search_url_with_params = search_url + '?' + '&'.join([f"{k}={v}" for k, v in params.items()])
+            # Construct full URL with parameters using urlencode
+            from urllib.parse import urlencode
+            search_url_with_params = f"{search_url}?{urlencode(params)}"
             
             print(f"Scraping Wellfound jobs for '{job_title}' using Firecrawl...")
             

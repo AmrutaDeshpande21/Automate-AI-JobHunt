@@ -14,19 +14,20 @@ class JobFilter:
         """Initialize the filter"""
         pass
     
-    def filter_by_title(self, jobs: List[Dict], title_keywords: List[str], exact_match: bool = False) -> List[Dict]:
+    def filter_by_title(self, jobs: List[Dict], title_keywords: List[str], exact_match: bool = False, exclude_keywords: Optional[List[str]] = None) -> List[Dict]:
         """
-        Filter jobs by title keywords.
+        Filter jobs by title keywords and optionally exclude certain keywords.
         
         Args:
             jobs (List[Dict]): List of jobs to filter
             title_keywords (List[str]): Keywords to match in job title
             exact_match (bool): If True, match entire title; if False, match any keyword
+            exclude_keywords (List[str]): Keywords to exclude (if present in title, job is removed)
             
         Returns:
             List[Dict]: Filtered jobs
         """
-        if not title_keywords:
+        if not title_keywords and not exclude_keywords:
             return jobs
         
         filtered_jobs = []
@@ -34,6 +35,15 @@ class JobFilter:
         for job in jobs:
             title = job.get('title', '').lower()
             
+            # First, check exclusions
+            if exclude_keywords:
+                if any(kw.lower() in title for kw in exclude_keywords):
+                    continue
+            
+            if not title_keywords:
+                filtered_jobs.append(job)
+                continue
+
             if exact_match:
                 # Match entire title
                 if title in [kw.lower() for kw in title_keywords]:

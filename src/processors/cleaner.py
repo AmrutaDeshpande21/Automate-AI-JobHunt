@@ -15,31 +15,71 @@ class DataCleaner:
         """Initialize the cleaner"""
         self.common_location_mappings = {
             'delhi': 'Delhi',
+            'new delhi': 'Delhi',
             'mumbai': 'Mumbai',
+            'bombay': 'Mumbai',
             'bangalore': 'Bangalore',
+            'banglore': 'Bangalore',
+            'bengaluru': 'Bangalore',
             'hyderabad': 'Hyderabad',
             'pune': 'Pune',
+            'chennai': 'Chennai',
+            'madras': 'Chennai',
+            'kolkata': 'Kolkata',
+            'calcutta': 'Kolkata',
+            'gurgaon': 'Gurugram',
+            'gurugram': 'Gurugram',
+            'noida': 'Noida',
             'remote': 'Remote',
+            'anywhere': 'Remote',
             'work from home': 'Remote',
             'wfh': 'Remote',
+            'united states': 'USA',
+            'usa': 'USA',
+            'india': 'India',
         }
+        
+        # Phrases to remove from titles
+        self.title_garbage_phrases = [
+            r'\(.*?\)', # anything in parentheses
+            r'\[.*?\]', # anything in brackets
+            r'urgent hiring',
+            r'immediate joiner',
+            r'hiring for',
+            r'looking for',
+            r'remote',
+            r'wfh',
+            r'-\s*\d+\s*posts',
+            r'\|.*$', # anything after a pipe
+        ]
+
+    def _clean_job_title(self, title: str) -> str:
+        """Specifically clean job titles by removing meta-information"""
+        title = self._clean_text(title)
+        
+        # Remove garbage phrases
+        for phrase in self.title_garbage_phrases:
+            title = re.sub(phrase, '', title, flags=re.IGNORECASE)
+            
+        # Clean up double spaces or trailing punctuation
+        title = re.sub(r'\s+', ' ', title).strip()
+        title = re.sub(r'[-|/,]$', '', title).strip()
+        
+        return title.title()
     
     def clean_job(self, job: Dict) -> Dict:
         """
         Clean a single job record.
-        
-        Args:
-            job (Dict): Job data to clean
-            
-        Returns:
-            Dict: Cleaned job data
         """
         cleaned_job = job.copy()
         
         # Clean string fields
         for field in ['title', 'company', 'location', 'description']:
             if field in cleaned_job:
-                cleaned_job[field] = self._clean_text(cleaned_job[field])
+                if field == 'title':
+                    cleaned_job[field] = self._clean_job_title(cleaned_job[field])
+                else:
+                    cleaned_job[field] = self._clean_text(cleaned_job[field])
         
         # Normalize location
         if 'location' in cleaned_job:

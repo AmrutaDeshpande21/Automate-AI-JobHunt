@@ -74,6 +74,7 @@ class DataProcessor:
         self,
         jobs: List[Dict],
         title_keywords: Optional[List[str]] = None,
+        exclude_keywords: Optional[List[str]] = None,
         locations: Optional[List[str]] = None,
         sources: Optional[List[str]] = None,
         job_types: Optional[List[str]] = None,
@@ -87,6 +88,7 @@ class DataProcessor:
         Args:
             jobs (List[Dict]): Raw job data
             title_keywords (List[str]): Keywords to filter by job title
+            exclude_keywords (List[str]): Keywords to exclude from job title
             locations (List[str]): Locations to filter by
             sources (List[str]): Sources to filter by
             job_types (List[str]): Job types to filter by
@@ -108,8 +110,8 @@ class DataProcessor:
         # Then apply filters
         filtered_jobs = processed_jobs
         
-        if title_keywords:
-            filtered_jobs = self.filter.filter_by_title(filtered_jobs, title_keywords)
+        if title_keywords or exclude_keywords:
+            filtered_jobs = self.filter.filter_by_title(filtered_jobs, title_keywords or [], exclude_keywords=exclude_keywords)
         
         if locations:
             filtered_jobs = self.filter.filter_by_location(filtered_jobs, locations)
