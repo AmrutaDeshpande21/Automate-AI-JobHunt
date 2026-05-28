@@ -107,4 +107,10 @@ We aim to develop a job agent that automates the process of job hunting by scrap
 - **Verification Run**: Verified search for `"Sales Executive"` in `"Bengaluru"` with `--platforms wellfound --open-browser`. It successfully normalized the location to `"Bangalore"`, constructed the properly encoded URL `https://wellfound.com/jobs?q=Sales+Executive&l=Bangalore`, launched it in the system browser, and exited cleanly.
 - **Test Validation**: Executed all integration and storage test suites using python's unittest runner. All 8 tests passed without errors.
 
+### Step 11: Bypassing Wellfound Login Wall & Parser Implementation
+- **Bypassing Login Redirects**: Identified that Wellfound redirects unauthenticated search query requests (`/jobs?q=...`) to the home landing page. Discovered and implemented Wellfound's public SEO directory URL route (`/role/l/{role-slug}/{location-slug}`) which allows guest users and crawlers to access full job lists without logging in.
+- **Card-Based Markdown Parser**: Reconstructed the empty `_parse_wellfound_jobs` parser in `src/scrapers/wellfound.py` to match the markdown structure returned by Firecrawl on Wellfound's SEO route. Implemented block splitting based on company card prefixes (`[![Logo](...)`) and extracted job titles, companies, locations, descriptions, and application URLs.
+- **Verification & Integration Tests**: Executed `test_integration.py` successfully. The scraper fetched and parsed **32 live jobs** from Wellfound. Committed and pushed both fixes to GitHub (Commit `4566042`).
+
+
 
