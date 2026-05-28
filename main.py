@@ -81,9 +81,9 @@ def main():
     )
     
     parser.add_argument(
-        '--open-browser',
+        '--no-browser',
         action='store_true',
-        help='Open the job search page in the system web browser'
+        help='Do not open the job search page in the system web browser'
     )
     
     parser.add_argument(
@@ -109,8 +109,8 @@ def main():
     logger.info(f"Platforms: {args.platforms}")
     logger.info("================================================================================")
     
-    # Open browser if requested
-    if args.open_browser:
+    # Open browser automatically (unless disabled)
+    if not args.no_browser:
         import webbrowser
         from urllib.parse import urlencode
         from src.processors.cleaner import DataCleaner
