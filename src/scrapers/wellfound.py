@@ -50,15 +50,16 @@ class WellfoundScraper(BaseScraper):
             return []
         
         try:
-            # Build search URL
-            search_url = f"{self.base_url}/jobs"
-            params = {'q': job_title}
-            if location:
-                params['l'] = location
+            # Format title and location as URL slugs
+            role_slug = job_title.lower().strip().replace(' ', '-')
+            role_slug = ''.join(c for c in role_slug if c.isalnum() or c == '-')
             
-            # Construct full URL with parameters using urlencode
-            from urllib.parse import urlencode
-            search_url_with_params = f"{search_url}?{urlencode(params)}"
+            if location:
+                loc_slug = location.lower().strip().replace(' ', '-')
+                loc_slug = ''.join(c for c in loc_slug if c.isalnum() or c == '-')
+                search_url_with_params = f"{self.base_url}/role/l/{role_slug}/{loc_slug}"
+            else:
+                search_url_with_params = f"{self.base_url}/role/{role_slug}"
             
             print(f"Scraping Wellfound jobs for '{job_title}' using Firecrawl...")
             
@@ -131,18 +132,52 @@ class WellfoundScraper(BaseScraper):
         jobs = []
         
         try:
-            # The structure depends on Firecrawl's response format
-            # This is a basic template that should be adjusted based on actual response
+            # Firecrawl v1 response structure: {'success': True, 'data': {...}}
+            data = scraped_data.get('data', {})
+            content = data.get('markdown', data.get('html', ''))
             
-            content = scraped_data.get('markdown', scraped_data.get('html', ''))
+            if not content:
+                print("No content found in Firecrawl response")
+                return []
+                
+            import re
             
-            # Parse the content to extract job listings
-            # This is a simplified version - actual implementation depends on page structure
-            
-            # Note: Actual parsing logic should be implemented based on Wellfound's page structure
-            
+            # Split by company logo markdown card start
+            company_blocks = re.split(r'\n(?=\[!\[)', content)
+            for block in company_blocks:
+                comp_match = re.search(r'\[\*\*(.*?)\*\*\]', block)
+                if not comp_match:
+                    continue
+                company = comp_match.group(1).strip()
+                
+                # Extract job links
+                job_matches = re.finditer(r'\[(.*?)\]\((https://wellfound\.com/jobs/\d+-[a-zA-Z0-9-]+)\)', block)
+                
+                # Locate location line
+                location = 'Remote'
+                loc_lines = [line.strip() for line in block.split('\n') if any(word in line.lower() for word in ['remote', 'india', 'bengaluru', 'bangalore', 'hybrid'])]
+                if loc_lines:
+                    filtered_locs = [l for l in loc_lines if not l.startswith('[') and not l.startswith('!') and not l.startswith('-')]
+                    if filtered_locs:
+                        location = filtered_locs[0].strip()
+                    
+                for match in job_matches:
+                    title = match.group(1).strip()
+                    link = match.group(2).strip()
+                    desc = block[:200].strip()
+                    
+                    job_info = {
+                        'title': title,
+                        'company': company,
+                        'location': location,
+                        'description': desc,
+                        'link': link
+                    }
+                    if self._validate_job_data(job_info):
+                        jobs.append(self._add_metadata(job_info))
+                        
             return jobs
-        
+            
         except Exception as e:
             print(f"Error parsing Wellfound jobs: {e}")
             return []

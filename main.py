@@ -133,10 +133,14 @@ def main():
                 else:
                     url = f"https://www.naukri.com/{search_title_url}-jobs-1"
             elif platform == 'wellfound':
-                params = {'q': args.job_title}
+                role_slug = args.job_title.lower().strip().replace(' ', '-')
+                role_slug = ''.join(c for c in role_slug if c.isalnum() or c == '-')
                 if normalized_loc:
-                    params['l'] = normalized_loc
-                url = f"https://wellfound.com/jobs?{urlencode(params)}"
+                    loc_slug = normalized_loc.lower().strip().replace(' ', '-')
+                    loc_slug = ''.join(c for c in loc_slug if c.isalnum() or c == '-')
+                    url = f"https://wellfound.com/role/l/{role_slug}/{loc_slug}"
+                else:
+                    url = f"https://wellfound.com/role/{role_slug}"
             elif platform == 'remoteok':
                 params = {'q': args.job_title}
                 url = f"https://remoteok.com/remote-jobs?{urlencode(params)}"
