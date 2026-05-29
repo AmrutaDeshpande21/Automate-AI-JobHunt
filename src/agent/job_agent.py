@@ -163,6 +163,7 @@ class JobAgent:
         
         logger.info(f"Jobs after filtering: {len(filtered_jobs)}")
         
+        self.processed_jobs = filtered_jobs
         return self._create_dataframe(filtered_jobs)
     
     def _create_dataframe(self, jobs: List[dict]) -> pd.DataFrame:
@@ -301,7 +302,7 @@ class JobAgent:
             print("No jobs available. Run search_jobs() first.")
             return
         
-        df = self._create_dataframe(self.all_jobs)
+        df = self._create_dataframe(self.processed_jobs if self.processed_jobs else self.all_jobs)
         
         encoding = sys.stdout.encoding or 'utf-8'
         

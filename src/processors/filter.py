@@ -49,8 +49,52 @@ class JobFilter:
                 if title in [kw.lower() for kw in title_keywords]:
                     filtered_jobs.append(job)
             else:
-                # Match any keyword
-                if any(kw.lower() in title for kw in title_keywords):
+                # Smart title matching
+                match_found = False
+                for raw_kw in title_keywords:
+                    kw = raw_kw.lower().strip()
+                    # Clean and split the query keyword into individual terms
+                    query_words = [w for w in re.findall(r'[a-z0-9]+', kw) if len(w) > 1]
+                    if not query_words:
+                        if kw in title:
+                            match_found = True
+                            break
+                        continue
+                    
+                    # Define standard role synonyms
+                    role_synonyms = {'developer', 'engineer', 'programmer', 'coder', 'specialist', 'analyst', 'architect', 'expert'}
+                    
+                    # Define domain/skill synonyms
+                    domain_synonyms = {
+                        'hr': {'hr', 'human resources', 'recruiting', 'recruiter', 'talent acquisition', 'people operations'},
+                        'react': {'react', 'reactjs', 'react.js'},
+                        'sales': {'sales', 'account executive', 'business development'},
+                    }
+                    
+                    # Require all words in the search query to have a match in the job title
+                    all_words_matched = True
+                    for qw in query_words:
+                        if qw in role_synonyms:
+                            # If it's a role word, match if any role synonym is in the title
+                            if not any(syn in title for syn in role_synonyms):
+                                all_words_matched = False
+                                break
+                        elif qw in domain_synonyms:
+                            # If it's a domain word, match if any of its synonyms is in the title
+                            if not any(syn in title for syn in domain_synonyms[qw]):
+                                all_words_matched = False
+                                break
+                        else:
+                            # If it's a skill/domain word (e.g. 'python', 'java'), it MUST be in the title
+                            if qw not in title:
+                                all_words_matched = False
+                                break
+                                
+                    if all_words_matched:
+                        match_found = True
+                        break
+                        
+                if match_found:
                     filtered_jobs.append(job)
         
         return filtered_jobs

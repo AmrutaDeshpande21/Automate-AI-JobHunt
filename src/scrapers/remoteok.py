@@ -57,8 +57,7 @@ class RemoteOKScraper(BaseScraper):
                 if not pos:
                     continue
                     
-                if job_title and job_title.lower() not in pos.lower():
-                    continue
+
                 
                 job_data = self._extract_job_info(job)
                 if job_data and self._validate_job_data(job_data):

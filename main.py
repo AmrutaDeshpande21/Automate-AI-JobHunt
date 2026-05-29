@@ -175,17 +175,16 @@ def main():
         remove_duplicates=not args.no_deduplicate
     )
     
-    # Filter jobs if criteria provided
-    if args.filter_locations or args.filter_sources:
-        logger.info("================================================================================")
-        logger.info("FILTERING JOBS")
-        logger.info("================================================================================")
-        
-        df = agent.filter_jobs(
-            title_keywords=[args.job_title],
-            locations=args.filter_locations,
-            sources=args.filter_sources
-        )
+    # Always filter by the searched job title, and apply location/source criteria if provided
+    logger.info("================================================================================")
+    logger.info("FILTERING JOBS BY CRITERIA")
+    logger.info("================================================================================")
+    
+    df = agent.filter_jobs(
+        title_keywords=[args.job_title],
+        locations=args.filter_locations,
+        sources=args.filter_sources
+    )
     
     # Display summary
     agent.display_summary()
